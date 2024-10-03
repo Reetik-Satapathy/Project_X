@@ -59,10 +59,10 @@ class _AddMoreStockState extends State<AddMoreStock> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Add More Stock'),
-        backgroundColor: Colors.blue,
-      ),
+      // appBar: AppBar(
+      //   title: Text('Add More Stock'),
+      //   backgroundColor: Colors.blue,
+      // ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -107,7 +107,7 @@ class _AddMoreStockState extends State<AddMoreStock> {
                 child: Text(
                   'Update Stock',
                   style: TextStyle(
-                    fontSize: 17.0,
+                    fontSize: 16.0,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),

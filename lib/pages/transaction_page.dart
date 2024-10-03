@@ -2,11 +2,18 @@
 
 import 'package:flutter/material.dart';
 import 'package:project_x/pages/dashboard.dart';
+import 'package:project_x/pages/stats.dart';
 
 class TransactionPage extends StatefulWidget {
   final List<Map<String, dynamic>> inventory;
+  final Function(int) updateOrderCount; // Function to update order count
+  final Function(double) updateTotalRevenue; // Function to update total revenue
 
-  TransactionPage({required this.inventory});
+  TransactionPage({
+    required this.inventory,
+    required this.updateOrderCount,
+    required this.updateTotalRevenue,
+  });
 
   @override
   _TransactionPageState createState() => _TransactionPageState();
@@ -25,6 +32,13 @@ class _TransactionPageState extends State<TransactionPage> {
     setState(() {
       _purchaseList.add({'vegetable': null, 'quantity': 0.0});
     });
+  }
+
+  void _clearFields() {
+    _rollNumberController.clear();
+    _nameController.clear();
+    _companyNameController.clear();
+    _phoneNumberController.clear();
   }
 
   double _calculateTotalPrice() {
@@ -71,6 +85,7 @@ class _TransactionPageState extends State<TransactionPage> {
         SnackBar(content: Text(errorMessage)),
       );
     } else {
+      // Update stock and complete the transaction
       for (var purchase in _purchaseList) {
         var vegetable = purchase['vegetable'];
         double quantity = purchase['quantity'];
@@ -80,6 +95,23 @@ class _TransactionPageState extends State<TransactionPage> {
         }
       }
 
+      // Calculate total price
+      double totalPrice = _calculateTotalPrice();
+      int totalOrdersChanged = 0;
+      double totalRevenueChanged = 0;
+
+      for (var purchase in _purchaseList) {
+        if (purchase['vegetable'] != null) {
+          totalOrdersChanged++;
+          totalRevenueChanged += double.parse(purchase['vegetable']['price']) * purchase['quantity'];
+        }
+      }
+
+      // Update the order count and total revenue
+      // print("Before Update - Total Orders: ${widget.updateOrderCount}, Total Revenue: ${widget.updateTotalRevenue}");
+      widget.updateOrderCount(totalOrdersChanged);
+      widget.updateTotalRevenue(totalRevenueChanged);
+      // print("After Update - Total Orders: ${widget.updateOrderCount}, Total Revenue: ${widget.updateTotalRevenue}");
 
       showDialog(
         context: context,
@@ -90,12 +122,21 @@ class _TransactionPageState extends State<TransactionPage> {
             actions: [
               TextButton(
                 onPressed: () {
-                  Navigator.push(
+                  Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => Dashboard(inventory: widget.inventory),
+                      builder: (context) => StatisticsPage(
+                        totalOrders: totalOrdersChanged,
+                        totalRevenue: totalRevenueChanged,
+                      ),
                     ),
                   );
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //     builder: (context) => Dashboard(inventory: widget.inventory),
+                  //   ),
+                  // );
                 },
                 child: Text("OK"),
               ),
@@ -109,10 +150,6 @@ class _TransactionPageState extends State<TransactionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Transaction Page'),
-        backgroundColor: Colors.blue,
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -141,7 +178,7 @@ class _TransactionPageState extends State<TransactionPage> {
                 );
               }).toList(),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 10),
             if (_selectedBuyerType == 'Student') ...[
               TextField(
                 controller: _nameController,
@@ -199,7 +236,7 @@ class _TransactionPageState extends State<TransactionPage> {
                 ),
               ),
             ],
-            SizedBox(height: 20),
+            SizedBox(height: 5),
             Text(
               "Select Vegetables:",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -262,7 +299,7 @@ class _TransactionPageState extends State<TransactionPage> {
                 },
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 15),
             Center(
               child: ElevatedButton(
                 onPressed: _addVegetableToPurchase,
@@ -280,20 +317,25 @@ class _TransactionPageState extends State<TransactionPage> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 20),
-            Center(
-              child: ElevatedButton(
-                onPressed: _completeTransaction,
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                  backgroundColor: Colors.blue,
-                ),
-                child: Text(
-                  'Complete Transaction',
-                  style: TextStyle(
-                    color: Colors.white,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: _clearFields,
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size(120, 50),
+                    backgroundColor: Colors.red[100],
                   ),
+                  child: Text('Cancel'),
                 ),
-              ),
+                ElevatedButton(
+                  onPressed: _completeTransaction,
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size(120, 50),
+                  ),
+                  child: Text('Complete Transaction'),
+                ),
+              ],
             ),
           ],
         ),
